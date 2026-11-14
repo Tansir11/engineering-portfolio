@@ -6,36 +6,55 @@
 
 **华东赛区一等奖 · 全国赛区一等奖**
 
-负责车端控制程序和网页地面站开发。国赛实现视觉色块跟随、路径记录和自主返航。
+这是一台能记录路线并自主返航的竞赛智能车。华东赛区用遥控完成去程，国赛改用视觉识别色块，跟随人员行驶至终点。**我负责 TC377 车端应用和 KartGCS 网页地面站的代码编写。**
 
-![国赛阶段实车跑测动态预览](projects/kart-racing/media/national-preview.gif)
+### 实车演示
 
-[观看完整实车视频（约 41 秒）](projects/kart-racing/media/national-track.mp4)
+![国赛阶段实车跑测](projects/kart-racing/media/national-preview.gif)
 
-| 校赛阶段 | 国赛阶段 |
+国赛阶段实车跑测片段。 [观看完整视频（约 41 秒）](projects/kart-racing/media/national-track.mp4)
+
+### 系统架构
+
+```mermaid
+flowchart LR
+    CAM["摄像头 · 色块检测"] --> CTRL["TC377 · 任务状态机与车辆控制"]
+    IMU["IMU + 双轮编码器"] --> POSE["位姿估计与路径记录"]
+    POSE --> CTRL
+    CTRL --> DRIVE["舵机与驱动电机"]
+    CTRL <-->|遥测与控制参数| PC["FastAPI 地面站后端"]
+    PC <-->|WebSocket| WEB["网页地面站"]
+    PC --> CSV["CSV 运行日志"]
+```
+
+- **感知与定位**：摄像头识别人员身上的色块，为跟随提供目标位置。IMU 和双轮编码器用于估计车身航向与位置，为记录路线和返航提供输入。
+- **车端控制**：TC377 基于逐飞库运行任务状态机，按 10 ms 周期更新。状态机管理遥控、视觉跟随和返航阶段，控制程序计算转向与车速并下发到执行机构。
+- **地面站**：FastAPI 后端接收车辆遥测，通过 WebSocket 更新网页上的轨迹和运行状态。调试时在网页下发控制参数，并将实测数据导出为 CSV。
+
+### 赛题与运行逻辑
+
+| 阶段 | 车辆如何完成任务 |
 | --- | --- |
-| ![校赛场地中的实车](projects/kart-racing/media/campus-track.jpg) | ![国赛比赛场地](projects/kart-racing/media/national-venue.jpg) |
+| 华东赛区 · 科目一 | 先记录打点路径，再通过路径追踪复现路线。 |
+| 华东赛区 · 科目二 | 接收语音指令并执行指定动作。 |
+| 华东赛区 · 科目三 | 遥控从起点驶到终点，同时记录去程路线，再由车辆自主返回起点。 |
+| 全国赛区 | 识别人员身上的色块，按设定距离跟随并同步记录车辆路线，到达终点后切换到自主返航。 |
 
-华东赛区完成路径打点与复现、语音指令动作、遥控驶至终点后自主返航。全国赛区改为通过视觉识别人员身上的色块，跟随至终点并记录行驶路径，再自主返回起点。
+**视觉跟随与返航。** 车端先判断色块检测是否稳定，再进入跟随状态。跟随中根据目标在画面中的位置调整转向，并依据目标距离调节车速。目标短时丢失时减速，持续丢失时停车。进入返航阶段后，按去程记录生成返航路径，结合当前位姿用 Pure Pursuit 计算转向。
 
-### 个人负责
-
-- **车端控制**：基于 TC377 和逐飞库编写控制程序，融合 IMU 与双轮编码器进行定位，通过追踪算法复现打点路径。国赛加入视觉跟随状态机，按设定距离跟随色块并同步记录路径。
-- **网页地面站**：开发轨迹显示、控制参数下发、运行数据记录及 CSV 导出功能，用于实车测试和参数调试。
-
-### 网页地面站
+### 地面站与实车调试
 
 ![KartGCS 地面站界面](projects/kart-racing/media/ground-station.png)
 
-[查看地面站前端源码](projects/kart-racing/ground-station/index.html) · 实车连接和实时数据依赖本地 FastAPI 后端与 WebSocket。
+**调试案例 · 色块丢失后的响应。** 从实车日志中选取 84.7 秒、1,152 条连续记录，将跟随状态与左右轮实测速度放在同一时间轴上。调试时可对照「丢失减速」与「丢失停车」两个状态，检查车辆是否按预期降速和停下。
 
-### 遥测案例 · 色块丢失后的减速与停车
+![视觉跟随状态与左右轮实测速度](projects/kart-racing/media/telemetry.png)
 
-![视觉跟随状态和左右轮实测速度](projects/kart-racing/media/telemetry.png)
+[样例 CSV](projects/kart-racing/data/follow-sample.csv) · [遥测字段说明](projects/kart-racing/data/README.md) · [地面站前端源码](projects/kart-racing/ground-station/index.html)
 
-从实车日志截取约 **84.7 秒、1,152 条**连续记录，时间以该段首条记录为零点。上方两条曲线分别是左右轮实测速度，下方色带标记跟随状态。联调时可以把「丢失减速」「丢失停车」的切换与速度曲线对照，检查车端的响应。
-
-[查看样例 CSV](projects/kart-racing/data/follow-sample.csv) · [字段说明](projects/kart-racing/data/README.md)
+| 校赛现场 | 国赛现场 |
+| --- | --- |
+| ![校赛场地中的实车](projects/kart-racing/media/campus-track.jpg) | ![国赛比赛场地](projects/kart-racing/media/national-venue.jpg) |
 
 ## 其他项目
 
