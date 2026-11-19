@@ -8,7 +8,7 @@
 
 [项目概述](#项目概述) · [真机演示](#真机演示) · [从示教到部署](#从示教到部署) · [软件架构](#软件架构) · [代码结构](#代码结构)
 
-**个人工作**　ACT 模型训练与真机部署、网页控制台与示教采集流程集成。
+**个人负责：** ACT 模型训练与真机部署、网页控制台与示教采集流程集成。
 
 ## 项目概述
 
@@ -47,27 +47,34 @@ https://github.com/user-attachments/assets/bdc8eb5a-3314-462d-94f1-2368524f623d
 
 录制使用 LeRobot 的数据集与录制流程。保存后可以浏览双路图像，逐帧检查状态与动作，检查视频和动作帧数是否一致。
 
-<table>
-<tr><th width="50%">网页遥操作</th><th width="50%">双视觉示教数据检查</th></tr>
-<tr>
-<td valign="top"><a href="imitation-arm/media/console-manual.png"><img src="imitation-arm/media/console-manual.png" alt="实际网页遥操作界面：X05 手柄、水平移动、高度、手腕和夹爪控制" width="100%"></a></td>
-<td valign="top"><a href="imitation-arm/media/console-dataset.png"><img src="imitation-arm/media/console-dataset.png" alt="实际示教数据检查界面：外部与腕部相机画面、帧定位、六维关节状态与目标动作" width="100%"></a></td>
-</tr>
-<tr>
-<td>通过虚拟摇杆与按钮控制末端移动、手腕姿态和夹爪，也可切换至关节微调。</td>
-<td>浏览已保存片段，同步查看双路图像、实际关节状态和示教目标动作。</td>
-</tr>
-</table>
+**网页遥操作**
 
-<sub>以上为工程实际网页的分区截图，点击可查看大图。双视觉画面来自已保存的真实示教片段；截图时未连接机械臂。</sub>
+通过虚拟摇杆与按钮控制末端移动、手腕姿态和夹爪，也可切换至关节微调。
+
+![实际网页遥操作界面：X05 手柄、水平移动、高度、手腕和夹爪控制](imitation-arm/media/console-manual.png)
+
+**双视觉示教数据检查**
+
+浏览已保存片段，同步查看双路图像、实际关节状态和示教目标动作。
+
+![实际示教数据检查界面：外部与腕部相机画面、帧定位、六维关节状态与目标动作](imitation-arm/media/console-dataset.png)
+
+<sub>双视觉画面来自已保存的真实示教片段，点击图片可查看大图。网页截图均为设备未连接、训练与推理未运行时的界面。</sub>
 
 ### ACT 模型训练
+
+**已完成的训练记录**
+
+- **示教数据：** 本地数据集 `20261031_3`，共 50 条片段、23,491 帧，采集帧率 30 FPS。
+- **视觉观测：** 外部与腕部双相机，每路图像分辨率 640×480，并同步记录六维关节状态与示教动作。
+- **训练配置：** LeRobot ACT、CUDA，批量大小为 2；已保存训练至 100,000 步的模型检查点。
+- **保存内容：** 策略权重、模型配置及观测归一化参数，供真机推理加载。
 
 在网页选择本地数据集并配置训练步数、批量大小，由 `bridge.py` 组织 LeRobot 的 ACT 训练参数，使用 CUDA 执行训练，日志回传网页。训练结果保存为模型检查点，供运行页面加载。
 
 ![ACT 本地训练页面：配置训练步数、批量大小并启动训练](imitation-arm/media/console-training.png)
 
-<sub>训练参数配置界面；截图时当前服务未启动训练。</sub>
+<sub>ACT 训练参数配置界面；已完成的训练记录见上文。</sub>
 
 | 内容 | 训练与推理中的作用 |
 | :-- | :-- |
@@ -84,7 +91,7 @@ https://github.com/user-attachments/assets/bdc8eb5a-3314-462d-94f1-2368524f623d
 
 ![模型运行页面：选择已训练的 ACT 检查点，加载策略并执行](imitation-arm/media/console-model.png)
 
-<sub>模型运行界面，可选择本地已训练的检查点；截图时未加载模型或执行动作。</sub>
+<sub>模型运行界面，可选择本地已训练的检查点并加载策略。</sub>
 
 <table><tr>
 <td width="33%" align="center"><img src="imitation-arm/media/approach.jpg" alt="机械臂接近目标的视频截图" width="100%"><br><sub>接近目标 · 抓取视频 6.0 秒</sub></td>

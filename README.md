@@ -12,11 +12,14 @@
 
 ## 项目总览
 
-| 项目 | 个人工作 | 核心技术 | 周期 |
-| :-- | :-- | :-- | :-- |
-| [卡丁快跑](projects/01-kart-racing.md) | 智能车控制程序、网页地面站与实车联调 | TC377、逐飞库、定位与路径追踪、视觉跟随 | 2025.09–2026.09 |
-| [AI 语音对话手表](projects/02-ai-watch.md) | 触屏界面与语音交互功能开发 | ESP32-S3、LVGL、STT、DeepSeek、TTS | 2026.03–2026.09 |
-| [双视觉机械臂模仿学习抓取系统](projects/03-imitation-arm.md) | ACT 训练与部署、网页控制台及示教采集集成 | SO-101、LeRobot、PyTorch、ACT、双摄视觉 | 2026.09–2026.11 |
+- **[卡丁快跑](projects/01-kart-racing.md)** · 2025.09–2026.09<br>
+  基于 TC377 与逐飞库，负责车端应用程序、网页地面站及实车联调，实现定位、路径追踪与视觉跟随。
+
+- **[AI 语音对话手表](projects/02-ai-watch.md)** · 2026.03–2026.09<br>
+  基于 ESP32-S3 与 LVGL，负责触屏界面及 STT → DeepSeek → TTS 语音交互流程。
+
+- **[双视觉机械臂模仿学习抓取系统](projects/03-imitation-arm.md)** · 2026.09–2026.11<br>
+  基于 SO-101、LeRobot 与 PyTorch，负责双摄示教采集、ACT 训练、网页控制台与真机部署。
 
 ## 项目成果
 
@@ -24,7 +27,7 @@
 
 **华东赛区一等奖、全国赛一等奖。** 从华东赛区的惯导打点与路线复现，推进到国赛的视觉色块跟随、去程路径记录和倒车返航。配套网页地面站支持轨迹显示、参数下发与 CSV 导出。
 
-<img src="projects/kart-racing/media/national-exhibition.jpg" alt="卡丁快跑国赛项目展示现场" width="680">
+<img src="projects/kart-racing/media/national-competition.jpg" alt="国赛中车辆跟随人员身上色块的比赛画面" width="680">
 
 [查看项目介绍与工程框架 →](projects/01-kart-racing.md)
 
@@ -32,7 +35,7 @@
 
 使用微雪 ESP32-S3 触屏开发板，完成 AI 语音对话界面与交互流程。录音经 STT 转为文本，交给 DeepSeek 根据提示词生成回复，再由 TTS 合成语音并通过 I²S 播放。
 
-**项目成果**　中国国际大学生创新大赛三等奖、“汇创青春”市级二等奖、“挑战杯”校内赛二等奖。
+**项目成果：** 中国国际大学生创新大赛三等奖、“汇创青春”市级二等奖、“挑战杯”校内赛二等奖。
 
 <img src="projects/ai-watch/media/voice-page.jpg" alt="手表 AI 对话入口实拍视频抽帧" width="680">
 
@@ -41,6 +44,8 @@
 ### 双视觉机械臂模仿学习抓取系统
 
 基于 SO-101 与外部、腕部双摄像头采集示教数据，使用 LeRobot 训练 ACT 策略并部署到真机，在目标位置完成自主抓取与投放。
+
+**训练记录：** 一组示教数据包含 50 条片段、23,491 帧，已保存训练至 100,000 步的 ACT 检查点。
 
 <img src="projects/imitation-arm/media/workspace.jpg" alt="机械臂真机运行视频抽帧" width="680">
 
@@ -57,6 +62,6 @@
 
 ## 阅读与资料
 
-项目详情中的目录树对应原工程，附有模块职责与运行流程。三个项目均附有实拍演示。卡丁车展示比赛、地面站与数据截图，手表与机械臂补充了原始照片及带时间点说明的视频抽帧。
+本仓库用于展示三个项目的成果与实现思路，项目页面中的目录树对应原工程结构。各项目附有实拍视频、功能流程与模块说明。
 
-参考 [Personal-Project-Showcase](https://github.com/u32JOJO/Personal-Project-Showcase) 的项目总览和技术叙述方式，项目内容依据本人的实际工程整理。
+展示结构参考：[Personal-Project-Showcase](https://github.com/u32JOJO/Personal-Project-Showcase)。

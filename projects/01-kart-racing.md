@@ -12,9 +12,9 @@
 
 基于 AURIX TC377 和逐飞库开发竞赛智能车控制系统，结合 IMU、双轮编码器和视觉识别，实现打点路径复现、语音指令动作、视觉跟随与自主返航。配套开发 KartGCS 网页地面站，用于轨迹显示、参数下发和实测数据记录。
 
-**个人负责**　智能车控制程序和网页地面站的全部代码编写，以及定位、跟随、返航等功能的实车联调。
+**个人负责：** 基于逐飞库完成车端应用程序与网页地面站开发，以及定位、跟随、返航等功能的实车联调。
 
-<table><tr><td width="50%" align="center"><img src="kart-racing/media/national-controller.jpg" alt="国赛资料中的 TC377 控制器及接线" width="100%"><br><sub>TC377 控制器与外围接线</sub></td><td width="50%" align="center"><img src="kart-racing/media/national-exhibition.jpg" alt="国赛资料中的展示现场" width="100%"><br><sub>项目展示现场</sub></td></tr></table>
+<table><tr><td width="50%" align="center"><img src="kart-racing/media/national-controller.jpg" alt="TC377 控制器及接线" width="100%"><br><sub>TC377 控制器与外围接线</sub></td><td width="50%" align="center"><img src="kart-racing/media/national-exhibition.jpg" alt="全国赛赛场全景" width="100%"><br><sub>全国赛现场</sub></td></tr></table>
 
 ## 比赛演示
 
@@ -44,7 +44,7 @@ https://github.com/user-attachments/assets/12288ee7-8f96-4954-93e7-d39065050453
 
 ### 代码运行方式
 
-下表按当前本地工程的调用关系整理。
+各环节的调用关系如下。
 
 | 执行位置 | 主要调用 | 在系统中的作用 |
 | :-- | :-- | :-- |
@@ -166,7 +166,7 @@ y += 位移增量 × sin(中点航向)
 
 <sub>原始导出表格截图，包含 S3_CRUISE 等状态及运行数据。</sub>
 
-[地面站前端](kart-racing/ground-station/index.html)
+[查看地面站前端源码](kart-racing/ground-station/index.html)
 
 ## 代码结构
 
