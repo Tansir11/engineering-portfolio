@@ -16,11 +16,11 @@
 
 ## 实物演示
 
-演示聚焦 AI 语音助手页面操作，截取自原视频 9.3—13.7 秒，时长约 4.4 秒。
+以下为手表完整实拍演示视频，时长约 24 秒。
 
-https://github.com/user-attachments/assets/d709026d-7f4c-44de-a495-99f8d731d8c9
+https://github.com/user-attachments/assets/01f67a89-3718-4604-8d73-f24d3897cc7d
 
-[下载 AI 页面演示片段](ai-watch/media/ai-demo.mp4)
+[下载完整演示视频](ai-watch/media/watch-demo.mp4)
 
 ## 完整交互流程
 
