@@ -24,7 +24,7 @@
 
 **华东赛区一等奖、全国赛一等奖。** 从华东赛区的惯导打点与路线复现，推进到国赛的视觉色块跟随、去程路径记录和倒车返航。配套网页地面站支持轨迹显示、参数下发与 CSV 导出。
 
-<img src="projects/kart-racing/media/kart.jpg" alt="卡丁快跑实车" width="620">
+<img src="projects/kart-racing/media/national-exhibition.jpg" alt="卡丁快跑国赛项目展示现场" width="680">
 
 [查看项目介绍与工程框架 →](projects/01-kart-racing.md)
 
@@ -53,6 +53,6 @@
 
 ## 阅读与资料
 
-项目详情中的目录树对应原工程，附有模块职责与运行流程。仓库内的实车演示当前为卡丁车调试素材，遥测案例取自已有实测记录。
+项目详情中的目录树对应原工程，附有模块职责与运行流程。卡丁车详情包含国赛与华东赛区比赛演示、国赛阶段照片及地面站数据截图。遥测案例取自已有实测记录。
 
 参考 [Personal-Project-Showcase](https://github.com/u32JOJO/Personal-Project-Showcase) 的项目总览和技术叙述方式，项目内容依据本人的实际工程整理。

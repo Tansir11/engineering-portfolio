@@ -2,123 +2,182 @@
 
 # 卡丁快跑
 
-> **周期**　2025.09–2026.09
->
-> **成果**　华东赛区一等奖、全国赛一等奖
+**全国大学生智能汽车竞赛｜华东赛区一等奖、全国赛一等奖**
 
-**个人负责**　基于 AURIX TC377 与逐飞库编写智能车控制程序，开发 KartGCS 网页地面站，并使用轨迹和遥测数据开展实车联调。
+2025.09—2026.09　｜　AURIX TC377 · 逐飞库 · C · Python · FastAPI · WebSocket
 
-**国赛任务**　车辆识别人员身上的色块，跟随至终点并记录本车路线，随后按记录的路径倒车返回起点。
+[项目概述](#项目概述) · [比赛演示](#比赛演示) · [系统框架](#系统框架) · [主要职责与实现](#主要职责与实现) · [地面站与实测数据](#地面站与实测数据) · [代码结构](#代码结构)
 
-## 实车调试演示
+## 项目概述
 
-![实车调试动图](kart-racing/media/national-preview.gif)
+基于 AURIX TC377 和逐飞库开发竞赛智能车控制系统，结合 IMU、双轮编码器和视觉识别，实现打点路径复现、语音指令动作、视觉跟随与自主返航。配套开发 KartGCS 网页地面站，用于轨迹显示、参数下发和实测数据记录。
 
-[查看完整实车调试视频（约 41 秒）](kart-racing/media/national-track.mp4)
+**个人负责**　智能车控制程序和网页地面站的全部代码编写，以及定位、跟随、返航等功能的实车联调。
 
-## 原工程目录
+<table><tr><td width="50%" align="center"><img src="kart-racing/media/national-controller.jpg" alt="国赛资料中的 TC377 控制器及接线" width="100%"><br><sub>TC377 控制器与外围接线</sub></td><td width="50%" align="center"><img src="kart-racing/media/national-exhibition.jpg" alt="国赛资料中的展示现场" width="100%"><br><sub>项目展示现场</sub></td></tr></table>
 
-下面按本地工程的实际路径说明模块位置。
+## 比赛演示
+
+### 全国赛区
+
+以视觉识别人员身上的色块，控制车辆跟随到终点并同步记录去程路线，再自主返回起点。以下为带信标赛场的完整比赛视频。
+
+https://github.com/user-attachments/assets/216b5492-6821-405f-9e5a-5105582cb5bc
+
+[下载国赛视频 · 约 3 分 26 秒](kart-racing/media/national-competition.mp4)
+
+### 华东赛区
+
+华东赛区包含三个科目。科目一先打点再复现路线；科目二通过语音交互执行指定动作；科目三先遥控从起点行驶至终点，再自主返回起点。以下为华东赛区完整视频。
+
+https://github.com/user-attachments/assets/12288ee7-8f96-4954-93e7-d39065050453
+
+[下载华东赛区视频 · 约 1 分 50 秒](kart-racing/media/east-china-competition.mp4)
+
+## 系统框架
+
+车端围绕「输入与定位、任务调度、运动控制」组织功能，地面站负责状态展示与参数交互。当前应用运行在 CPU0，CPU1、CPU2 保留启动框架。
+
+```mermaid
+flowchart TD
+    subgraph INPUT["输入与定位"]
+        I["IMU + 双轮编码器"] --> P["ins.c 位姿估计"]
+        CAM["摄像头"] --> V["leader_vision / leader_position 色块检测与位置估计"]
+        RC["遥控输入 / 语音命令"]
+    end
+    subgraph CONTROL["任务与车辆控制"]
+        SM["state_machine.c 总状态机"]
+        MAP["map.c 路径记录"]
+        FOLLOW["leader_follow.c 视觉跟随"]
+        RETURN["subject3.c 返航路径生成"]
+        TRACK["路径追踪与车速规划"]
+        EXEC["motor / steer_motor 执行器控制"]
+    end
+    P --> MAP
+    P --> TRACK
+    V --> FOLLOW
+    RC --> SM
+    SM --> FOLLOW
+    SM --> TRACK
+    MAP --> RETURN
+    RETURN --> TRACK
+    FOLLOW --> EXEC
+    TRACK --> EXEC
+    SM <-->|"遥测与参数"| UART["uart.c 通信"]
+    UART <-->|"串口 / Wi-Fi TCP"| GCS["KartGCS 后端"]
+    GCS <-->|"WebSocket"| WEB["网页轨迹、曲线与参数"]
+```
+
+**调度方式**　`user/isr.c` 每 10 ms 调用 `state_machine_tick_10ms()`，执行定位更新、任务控制和执行器闭环。CPU0 主循环处理图像服务、地面站通信、地图保存与加载，科目三在主循环生成返航地图。
+
+## 主要职责与实现
+
+### 控制与定位
+
+基于逐飞库完成 TC377 外设与控制程序集成。使用双轮编码器测量车轮脉冲，结合陀螺仪角速度更新车辆航向和位置；根据车辆位姿记录路径点，巡航时将当前位姿与参考路径进行比较，计算转向和车速。
+
+正向追踪支持 Pure Pursuit；倒车返航进入带行驶方向的路径控制分支。电机模块和转向模块分别执行车速、转向闭环，公共调节参数集中在 `config.c`。
+
+### 视觉跟随
+
+国赛阶段加入色块检测、目标位置估计和跟随状态机。连续检测稳定后进入跟随，根据目标方位调整转向，并利用色块高度与设定值的偏差辅助调节车速。目标短时丢失时减速，持续丢失时停车，检测恢复后重新确认目标。
+
+<table><tr><td width="50%" align="center"><img src="kart-racing/media/national-vision.jpg" alt="车载屏幕中的色块图像" width="70%"><br><sub>车载色块识别画面</sub></td><td width="50%" align="center"><img src="kart-racing/media/national-vehicle.jpg" alt="国赛资料中的整车与传感器布局" width="70%"><br><sub>整车、摄像头与控制部件布局</sub></td></tr></table>
+
+### 路径记录与返航
+
+去程控制源可以选择遥控或视觉跟随，两者共用科目三控制接口。去程同步记录的是本车实际行驶轨迹，终点切换后用于生成返航路径。
+
+```mermaid
+flowchart LR
+    A["遥控 / 视觉跟随去程"] --> B["记录本车路径"]
+    B --> C["终点刹车触发返航"]
+    C --> D["等待双轮停稳并保存路线"]
+    D --> E["生成倒车路径"]
+    E --> F["追踪路径返回起点"]
+```
+
+收到返航请求后，状态机等待两轮实测速度稳定，并补记滑行与制动过程中的路径点；随后保存本轮路线到 RAM，加载路线并生成倒车路径，再进入返航巡航。
+
+## 地面站与实测数据
+
+### 轨迹、曲线与参数联调
+
+基于 FastAPI 和 WebSocket 开发网页地面站。车端经串口或 Wi-Fi TCP 上报数据，后端解析后更新车辆轨迹、运行曲线和状态；网页可下发控制指令与参数，支持记录并导出 CSV。
+
+![地面站实际运行中的轨迹与曲线](kart-racing/media/national-ground-station-run.jpg)
+
+<sub>实车运行画面，左侧显示轨迹，右侧对照运行曲线。</sub>
+
+![另一组地面站实车联调画面](kart-racing/media/national-ground-station-curves.jpg)
+
+<sub>另一组调试记录，用于结合轨迹、曲线和参数观察车辆响应。</sub>
+
+<details>
+<summary>查看地面站完整界面布局</summary>
+
+![地面站界面布局](kart-racing/media/ground-station.png)
+
+该截图为未连接设备时的界面布局，展示轨迹区、控制面板、日志区与曲线区。
+
+</details>
+
+### 遥测记录与数据分析
+
+车端 `telemetry.c` 生成遥测快照，`uart.c` 发送运行数据；`protocol.py` 按前缀解析帧，`server.py` 分发消息与导出数据，`session_manager.py` 组织会话记录。路径点通过 `P2` 帧传输，地图上下文使用 `M2` 帧，视觉跟随记录使用 `LF` 帧。
+
+![导出的运行数据表格](kart-racing/media/national-data-table.png)
+
+<sub>原始导出表格截图，包含 S3_CRUISE 等状态及运行数据。下方分析图使用另一份视觉跟随日志样例。</sub>
+
+**实测案例**　从视觉跟随日志中提取 84.7 秒、1,152 条连续记录，将状态切换与左右轮实测速度对齐。记录在 9.203 秒处于丢失减速状态，9.416 秒切换到丢失停车状态，10.118 秒两轮实测速度均为零，可据此观察控制状态与机械减速过程的对应关系。
+
+![视觉跟随状态与双轮实测速度](kart-racing/media/telemetry.png)
+
+[查看样例 CSV](kart-racing/data/follow-sample.csv) · [字段说明](kart-racing/data/README.md) · [地面站前端](kart-racing/ground-station/index.html)
+
+## 代码结构
+
+以下目录对应原始 TC377 固件与 KartGCS 工程。
 
 ```text
 TC377 固件/
 ├── user/
-│   ├── cpu0_main.c        # 初始化与主循环
-│   ├── cpu1_main.c        # 入口框架
-│   ├── cpu2_main.c        # 入口框架
-│   └── isr.c              # 10 ms 控制中断与外设回调
+│   ├── cpu0_main.c          # 外设初始化与主循环
+│   ├── cpu1_main.c          # 核入口框架
+│   ├── cpu2_main.c          # 核入口框架
+│   └── isr.c                # 10 ms 控制中断
 ├── code/
-│   ├── state_machine.c   # 车辆总状态机与公共巡航控制
-│   ├── subject1_map.c    # 科目一路线管理
-│   ├── subject2.c        # 语音命令动作调度
-│   ├── subject3.c        # 去程、地图保存与返航
+│   ├── state_machine.c     # 总状态机、公共巡航与控制分支
+│   ├── subject1_map.c      # 科目一路线管理
+│   ├── subject2.c          # 语音命令动作调度
+│   ├── subject3.c          # 去程模式、路线保存、返航地图
 │   ├── imu.c / encoder.c / ins.c / map.c
 │   ├── camera_manager.c / camera_color_calib.c
 │   ├── leader_vision.c / leader_position.c / leader_follow.c
 │   ├── pure_pursuit.c / motor.c / steer_motor.c / pid.c
 │   ├── garage_vision.c / garage_control.c
+│   ├── fixed_task_map.c    # 固定任务地图与 Flash 管理
 │   └── config.c / remote_control.c / telemetry.c / uart.c
-└── libraries/            # 英飞凌与逐飞支持代码
+└── libraries/              # 英飞凌 iLLD 与逐飞驱动支持
 
 KartGCS/
-├── server.py             # TCP / 串口接入、WebSocket、导出
-├── protocol.py           # 按帧前缀解析遥测与路径点
-├── session_manager.py    # 会话记录组织
-├── templates/index.html  # 网页界面
-└── requirements.txt      # Python 依赖
+├── server.py               # 连接接入、消息分发与 CSV 导出
+├── protocol.py             # 运行数据帧与路径点解析
+├── session_manager.py      # 会话记录
+├── templates/index.html    # 网页控制台
+└── requirements.txt        # Python 依赖
 ```
 
-## 模块职责
-
-| 工程 | 主要目录和入口 |
-| --- | --- |
-| **TC377 车端固件** | `user/` 放启动入口和中断；`code/` 放车辆应用；`libraries/` 放英飞凌 iLLD 和逐飞驱动。ADS 工程配置在根目录，`Debug/` 为构建输出。 |
-| **KartGCS 地面站** | 独立 Python 工程。 `server.py` 负责接入和消息分发，`protocol.py` 解析车端帧，`session_manager.py` 组织会话记录，`templates/index.html` 提供网页界面。 |
-
-### 车端模块
-
-| 职责 | 源码 | 如何配合 |
-| --- | --- | --- |
-| 启动与调度 | `user/cpu0_main.c`、`user/isr.c` | CPU0 初始化外设和应用。定时中断每 10 ms 推进一次控制状态机；主循环处理图像服务、通信、地图保存与加载。CPU1、CPU2 保留入口框架。 |
-| 任务调度 | `state_machine.c`、`subject1_map.c`、`subject2.c`、`subject3.c` | 状态机选择遥控、打点、巡航等分支。科目一管理打点地图，科目二接收语音命令并推进动作，科目三处理两种去程控制源、地图保存和返航。 |
-| 定位与路线 | `imu.c`、`encoder.c`、`ins.c`、`map.c`、`fixed_task_map.c` | 用陀螺仪和双轮脉冲更新航向与位置，按运行阶段记录路径点。固定任务地图有独立的 Flash 保存与加载流程。 |
-| 视觉跟随 | `camera_manager.c`、`camera_color_calib.c`、`leader_vision.c`、`leader_position.c`、`leader_follow.c` | 管理图像与色块标定，识别并估计目标位置，再把目标观测转换成车速、转向以及丢失后的减速或停车指令。 |
-| 路径追踪与执行器 | `state_machine.c`、`pure_pursuit.c`、`motor.c`、`steer_motor.c`、`pid.c` | 巡航分支根据当前位置和参考路径计算控制量。支持正向 Pure Pursuit，倒车分支使用带行驶方向的路径控制。电机和转向模块执行控制。 |
-| 回库视觉 | `garage_vision.c`、`garage_control.c` | 在科目三正向返航的相关阶段提供回库视觉辅助。 |
-| 遥控、配置与遥测 | `remote_control.c`、`config.c`、`telemetry.c`、`uart.c`、`intercore_comm.c`、`screen.c`、`voltage.c` | 接收遥控输入，维护可调参数、遥测快照、地面站收发以及车载状态显示。 |
-
-### 运行时调用关系
-
-```mermaid
-flowchart TD
-  A["CPU0 启动：初始化传感器、执行器和通信"] --> B["定时中断：每 10 ms 执行控制状态机"]
-  A --> C["CPU0 主循环"]
-  C --> D["相机管理、标定与色块检测"]
-  D --> E["跟随控制：生成车速与转向"]
-  B --> E
-  B --> F["读取 IMU 与编码器，更新位姿"]
-  F --> G["打点时记录路径，巡航时追踪路径"]
-  E --> H["电机与转向闭环"]
-  G --> H
-  G --> I["主循环保存或加载地图，生成返航路线"]
-  I -->|"返航路径"| G
-  B --> J["生成遥测快照"]
-  J --> K["主循环发送遥测，接收调参命令"]
-  K <-->|"串口 / Wi-Fi TCP"| L["KartGCS 后端"]
-  L <-->|"WebSocket"| M["浏览器：轨迹、运行状态与参数"]
-```
-
-### 科目三怎样从去程切到返航
-
-1. **去程。** 华东赛区科目三用遥控，国赛用视觉跟随。两种控制源都通过科目三的统一命令接口输出车速和转向；同时，惯导根据 IMU 和编码器更新本车位姿并记录路径点。
-2. **终点。** 遥控刹车触发返航请求。状态机等待双轮实测速度稳定，补记终点，并把当前去程路线保存到 RAM。保存、加载和返航地图构建在主循环执行。
-3. **返航。** 科目三模块以去程地图生成倒车路线，状态机进入巡航并根据当前位姿修正路径偏差。倒车分支把行驶方向传入路径控制，负责沿路线返回起点。
-
-华东赛区另有科目一「打点与路径复现」以及科目二「语音指令动作」。
-
-## 地面站与遥测案例
-
-| 环节 | 源码与数据 |
-| --- | --- |
-| 采集与发送 | 车端 `telemetry.c` 生成快照，`uart.c` 发送路径点与遥测。路径点用 `P2` 表示，地图上下文用 `M2` 声明，视觉跟随记录使用 `LF` 帧。 |
-| 接入与解析 | `server.py` 接入 TCP 或串口，`protocol.py` 按帧前缀解析字段。后端通过 WebSocket 更新浏览器，也接收由网页提交的控制和调参请求。 |
-| 记录与导出 | `session_manager.py` 管理会话记录；后端另行缓存视觉跟随记录并导出 CSV，用于对照目标状态与实际轮速。 |
-
-![KartGCS 地面站界面](kart-racing/media/ground-station.png)
-
-**一次实测：色块丢失后，车辆什么时候停稳？** 样例日志在 **9.203 秒**处于丢失减速状态，两轮实测速度为 **174.2 / 193.1 cm/s**。在 **9.416 秒**切换到丢失停车状态，此时轮速仍为 **108.3 / 135.6 cm/s**，到 **10.118 秒**两轮实测速度均为零。
-
-![视觉跟随状态与左右轮实测速度，横轴为相对时间](kart-racing/media/telemetry.png)
-
-[样例 CSV](kart-racing/data/follow-sample.csv) · [字段说明](kart-racing/data/README.md) · [地面站前端源码](kart-racing/ground-station/index.html)
-
-## 比赛现场
-
-| 校赛 | 国赛 |
-| --- | --- |
-| ![校赛场地中的实车](kart-racing/media/campus-track.jpg) | ![国赛比赛场地](kart-racing/media/national-venue.jpg) |
-
+| 模块 | 输入与职责 | 输出或调用关系 |
+| :-- | :-- | :-- |
+| `imu / encoder / ins` | 采集角速度与轮脉冲，更新本车位姿 | 供路径记录与巡航控制使用 |
+| `camera_manager / leader_vision / leader_position` | 管理相机、检测色块、估计目标位置 | 提供给 `leader_follow` |
+| `leader_follow` | 根据目标有效性与位置生成跟随命令 | 通过科目三统一接口参与车速和转向控制 |
+| `map / subject3` | 记录去程、保存与加载路线、生成返航地图 | 供总状态机的巡航分支追踪 |
+| `motor / steer_motor / pid` | 执行速度与转向闭环 | 控制驱动电机和转向执行器 |
+| `telemetry / uart` | 生成遥测、上传路径与接收指令 | 与地面站协议解析和参数分发衔接 |
 
 ## 开发环境
 
-车端采用 AURIX Development Studio 和 TASKING TriCore 工具链，基于逐飞库开发。地面站采用 Python、FastAPI、WebSocket 和浏览器前端，当前仓库附有前端文件与遥测样例。
+车端采用 AURIX Development Studio 与 TASKING TriCore 工具链，使用 C 和逐飞库；地面站采用 Python、FastAPI、WebSocket 与浏览器前端。
