@@ -2,36 +2,29 @@
 
 # ESP32-S3 AI 语音对话手表
 
-> **周期**　2026.03–2026.09
->
-> **个人负责**　手表端触屏界面与语音交互功能开发。
->
-> **成果**　中国国际大学生创新大赛三等奖、“汇创青春”市级二等奖、“挑战杯”校内赛二等奖。
+**中国国际大学生创新大赛三等奖｜“汇创青春”市级二等奖｜“挑战杯”校内赛二等奖**
 
-## 项目目标
+2026.03—2026.09　｜　ESP32-S3 · C/C++ · LVGL · SquareLine Studio · DeepSeek · I²S
 
-使用微雪 ESP32-S3-Touch-LCD-1.46 触屏开发板搭建手表原型，让用户通过触屏启动录音，在屏幕上查看识别文字和 AI 回复，并听到语音播报。界面使用 LVGL 与 SquareLine Studio，语音通过 STT、DeepSeek 和 TTS 三个接口串联。
+[项目概述](#项目概述) · [实物演示](#实物演示) · [完整交互流程](#完整交互流程) · [软件架构](#软件架构) · [个人工作与实现思路](#个人工作与实现思路) · [代码结构](#代码结构)
+
+**个人负责**　手表端触屏界面与语音交互功能开发。
+
+## 项目概述
+
+使用微雪 ESP32-S3 触屏开发板搭建手表原型，让用户通过触屏启动录音，在屏幕上查看识别文字和 AI 回复，并听到语音播报。界面使用 LVGL 与 SquareLine Studio，语音通过 STT、DeepSeek 和 TTS 三个接口串联。
+
+## 实物演示
+
+实拍展示表盘、触控菜单、AI 对话入口与聊天页面。以下为完整演示视频，约 24 秒。
+
+https://github.com/user-attachments/assets/01f67a89-3718-4604-8d73-f24d3897cc7d
+
+[下载完整演示视频](ai-watch/media/watch-demo.mp4)
 
 ## 完整交互流程
 
-```mermaid
-sequenceDiagram
-    participant U as 用户
-    participant W as 手表
-    participant S as STT 服务
-    participant L as DeepSeek
-    participant T as TTS 服务
-    U->>W: 触屏发起对话并录音
-    W->>S: 上传 WAV 录音
-    S-->>W: 识别文本
-    W-->>U: 显示识别文字
-    W->>L: 提示词与用户文本
-    L-->>W: 文字回复
-    W-->>U: 显示回复文字
-    W->>T: 提交回复文本
-    T-->>W: 合成音频
-    W-->>U: 通过 I²S 输出并播放
-```
+![从录音到 AI 语音回复的交互流程](ai-watch/media/conversation-flow.png)
 
 ### 从语音到回复
 
@@ -41,20 +34,7 @@ sequenceDiagram
 
 ## 软件架构
 
-```mermaid
-flowchart TD
-    UI["LVGL 页面与触屏事件"] --> CHAT["AI_Chat 对话调度"]
-    CHAT --> REC["MIC_Recorder 录音与 WAV 缓冲"]
-    REC --> STT["STT 语音识别"]
-    STT --> AI["DeepSeek 文字回复"]
-    AI --> TTS["TTS_Speaker 下载与播放"]
-    TTS --> OUT["I²S 音频输出"]
-    STT --> UI
-    AI --> UI
-    NET["WiFi_Manager 网络请求"] -.-> STT
-    NET -.-> AI
-    NET -.-> TTS
-```
+![手表界面、对话调度与音频网络模块](ai-watch/media/software-framework.png)
 
 ### 运行入口与状态机
 
@@ -62,11 +42,29 @@ flowchart TD
 
 对话状态按 `IDLE → RECORDING → STT_WAITING → AI_WAITING → TTS → DONE → IDLE` 推进。录音阶段更新采样，识别和生成阶段执行网络请求，播报阶段调用 `TTS_Update()`，播报完成后回到待机。
 
+## 功能与实现方法
+
+| 功能 | 实现方法 | 对应代码 |
+| :-- | :-- | :-- |
+| 触屏交互 | LVGL 对象与触摸事件、页面切换、聊天文字回调 | `squareline_ui/`、`LVGL_Driver.cpp` |
+| 音频采集 | 16 kHz、16 bit 单声道采样与 WAV 缓冲 | `MIC_Recorder.cpp` |
+| 对话生成 | STT 识别，提示词与识别文字交给 DeepSeek | `AI_Chat.cpp` |
+| 播报控制 | TTS 音频获取、分阶段更新、I²S 输出 | `TTS_Speaker.cpp` |
+| 阶段管理 | 对话状态枚举、状态反馈、录音与播放超时处理 | `AI_Chat.cpp`、`TTS_Speaker.cpp` |
+| 资源与显示 | PSRAM 存储录音，中文字体加载 | `MIC_Recorder.cpp`、`ui_FontLoader.cpp` |
+
 ## 个人工作与实现思路
 
 ### 触屏交互
 
 使用 LVGL 和 SquareLine Studio 搭建 12 个页面，编写页面切换与对话显示逻辑。生成页面集中在 `squareline_ui/`，聊天界面通过回调接收用户文字、AI 回复和运行状态。中文显示由字体资源和 `ui_FontLoader.cpp` 配合。
+
+<table>
+<tr><td width="50%" align="center"><img src="ai-watch/media/watch-face.jpg" alt="手表表盘实拍视频截图" width="100%"><br><sub>表盘画面 · 视频 2.5 秒</sub></td><td width="50%" align="center"><img src="ai-watch/media/menu.jpg" alt="触控菜单实拍视频截图" width="100%"><br><sub>触控菜单 · 视频 6.0 秒</sub></td></tr>
+<tr><td width="50%" align="center"><img src="ai-watch/media/voice-page.jpg" alt="AI 对话入口实拍视频截图" width="100%"><br><sub>AI 对话入口 · 视频 10.8 秒</sub></td><td width="50%" align="center"><img src="ai-watch/media/conversation.jpg" alt="聊天界面实拍视频截图" width="100%"><br><sub>聊天页面 · 视频 20.4 秒</sub></td></tr>
+</table>
+
+<sub>以上四幅画面均直接截取自本页演示视频。</sub>
 
 ### 对话流程管理
 
@@ -76,7 +74,7 @@ flowchart TD
 
 录音数据由 `MIC_Recorder.cpp` 分配到 PSRAM。云端返回文字后，`TTS_Speaker.cpp` 负责获取合成音频并推进 I²S 播放，让文本生成和音频输出形成完整交互。
 
-## 原工程目录
+## 代码结构
 
 ```text
 watch/
@@ -103,7 +101,12 @@ watch/
 
 上表列出与界面及语音对话直接相关的模块，原工程还包括电池、RTC、陀螺仪等外设模块。
 
-## 技术与成果
+## 硬件与开发环境
+
+<p align="center"><img src="ai-watch/media/board.jpg" alt="微雪 ESP32-S3 触屏开发板原始实物照" width="300"></p>
+
+<p align="center"><sub>提供的开发板实物照片</sub></p>
+
 
 | 项目 | 实现 |
 | :-- | :-- |

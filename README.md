@@ -34,13 +34,17 @@
 
 **项目成果**　中国国际大学生创新大赛三等奖、“汇创青春”市级二等奖、“挑战杯”校内赛二等奖。
 
-[查看交互流程、状态机与代码结构 →](projects/02-ai-watch.md)
+<img src="projects/ai-watch/media/watch-face.jpg" alt="AI 语音对话手表实拍视频抽帧" width="680">
+
+[查看实拍演示、交互流程与代码结构 →](projects/02-ai-watch.md)
 
 ### 双视觉机械臂模仿学习抓取系统
 
 基于 SO-101 与外部、腕部双摄像头采集示教数据，使用 LeRobot 训练 ACT 策略并部署到真机，在目标位置完成自主抓取与投放。
 
-[查看示教数据、ACT 训练与真机部署流程 →](projects/03-imitation-arm.md)
+<img src="projects/imitation-arm/media/workspace.jpg" alt="机械臂真机运行视频抽帧" width="680">
+
+[查看真机演示、ACT 训练与部署流程 →](projects/03-imitation-arm.md)
 
 ## 技术与实现
 
@@ -53,6 +57,6 @@
 
 ## 阅读与资料
 
-项目详情中的目录树对应原工程，附有模块职责与运行流程。卡丁车详情包含国赛与华东赛区比赛演示、国赛阶段照片及地面站数据截图。
+项目详情中的目录树对应原工程，附有模块职责与运行流程。三个项目均附有实拍演示。卡丁车展示比赛、地面站与数据截图，手表与机械臂补充了原始照片及带时间点说明的视频抽帧。
 
 参考 [Personal-Project-Showcase](https://github.com/u32JOJO/Personal-Project-Showcase) 的项目总览和技术叙述方式，项目内容依据本人的实际工程整理。

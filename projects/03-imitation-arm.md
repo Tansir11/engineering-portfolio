@@ -2,31 +2,46 @@
 
 # 双视觉机械臂模仿学习抓取系统
 
-> **周期**　2026.09–2026.11
->
-> **工作内容**　ACT 模型训练与真机部署，网页控制台与示教采集流程集成。
->
-> **成果**　在目标位置完成真机自主抓取与投放。
+**项目成果｜在目标位置完成真机自主抓取与投放**
 
-## 项目目标
+2026.09—2026.11　｜　SO-101 · Python · PyTorch · LeRobot · ACT · OpenCV
+
+[项目概述](#项目概述) · [真机演示](#真机演示) · [从示教到部署](#从示教到部署) · [软件架构](#软件架构) · [工程优化](#工程优化) · [代码结构](#代码结构)
+
+**个人工作**　ACT 模型训练与真机部署、网页控制台与示教采集流程集成。
+
+## 项目概述
 
 使用 SO-101 机械臂、外部相机与腕部相机，先人工示教抓取与投放动作，再用示教数据训练 ACT 策略。部署时，模型根据双路图像和当前关节状态预测后续关节动作，由机械臂执行。网页控制台把设备连接、数据采集、模型训练和真机运行串成一个本地工作流程。
 
+## 真机演示
+
+### 抓取与投放
+
+视频展示目标摆放、机械臂接近、夹取并放入盒中的过程，完整时长约 17 秒。
+
+https://github.com/user-attachments/assets/9957ae4c-4da3-4374-9683-9ae651e50bf4
+
+[下载抓取与投放视频](imitation-arm/media/pick-and-place.mp4)
+
+### 另一组真机运行画面
+
+视频展示另一组机械臂动作与相机安装布局，完整时长约 32 秒。
+
+https://github.com/user-attachments/assets/bdc8eb5a-3314-462d-94f1-2368524f623d
+
+[下载真机运行视频](imitation-arm/media/arm-motion.mp4)
+
 ## 从示教到部署
 
-```mermaid
-flowchart LR
-    A["主从机械臂 / X05 手柄示教"] --> B["记录双摄图像、关节状态与动作"]
-    B --> C["LeRobot 数据集"]
-    C --> D["ACT 策略训练"]
-    D --> E["保存模型检查点"]
-    E --> F["加载策略与相机配置"]
-    F --> G["真机观测与模型推理"]
-    G --> H["执行动作序列"]
-    H --> G
-```
+![示教数据采集、ACT 训练与真机推理流程](imitation-arm/media/training-flow.png)
 
 ### 示教与数据
+
+![机械臂与相机安装布局](imitation-arm/media/workspace.jpg)
+
+<sub>取自第二段真机运行视频 2.0 秒，可观察机械臂、夹爪与相机布局。</sub>
+
 
 通过 SO-101 主从机械臂或 X05 手柄控制从臂。外部相机观察工作区，腕部相机观察夹爪附近；采集时同时记录两路图像、六维关节状态和对应动作。六个控制量分别为底座、大臂、小臂、腕部俯仰、腕部旋转和夹爪。
 
@@ -49,24 +64,30 @@ flowchart LR
 
 模型训练与推理复用 LeRobot 的 ACT 实现，项目工作集中在设备接入、数据流程、训练配置与真机执行集成。
 
+<table><tr>
+<td width="33%" align="center"><img src="imitation-arm/media/approach.jpg" alt="机械臂接近目标的视频截图" width="100%"><br><sub>接近目标 · 抓取视频 6.0 秒</sub></td>
+<td width="33%" align="center"><img src="imitation-arm/media/transfer.jpg" alt="机械臂夹持目标并转移的视频截图" width="100%"><br><sub>夹持转移 · 抓取视频 10.8 秒</sub></td>
+<td width="33%" align="center"><img src="imitation-arm/media/placed.jpg" alt="目标放入盒中的视频截图" width="100%"><br><sub>放入盒中 · 抓取视频 14.0 秒</sub></td>
+</tr></table>
+
+<sub>以上为同一段抓取视频的原始抽帧。</sub>
+
 ## 软件架构
 
-```mermaid
-flowchart TD
-    UI["frontend 网页控制台"] <-->|"状态与操作"| B["bridge.py 配置与任务管理"]
-    B -->|"启动训练"| T["LeRobot ACT / CUDA"]
-    B <-->|"设备会话与进程状态"| S["web_session.py"]
-    S <-->|"双摄与关节观测"| HW["相机与 SO-101"]
-    S -->|"录制"| DATA["LeRobot 数据集"]
-    DATA --> T
-    T --> CK["模型检查点"]
-    CK -->|"加载"| S
-    S -->|"真机推理与动作下发"| HW
-    VIEW["dataset_view.py 片段浏览"] --> DATA
-    USB["usb_host.py USB 接入"] --> HW
-```
+![网页控制台、设备会话、数据集和模型的对应关系](imitation-arm/media/software-framework.png)
 
 Windows 侧负责网页入口和 USB 接入，机器人学习运行环境位于 WSL2。控制台按「设备与遥控、示教与数据、模型训练、模型运行」组织功能，使采集数据和模型检查点能够在同一工作流中使用。
+
+## 功能与方法
+
+| 功能 | 使用方法 | 工程对应 |
+| :-- | :-- | :-- |
+| 主从示教 | 读取主臂关节动作，映射到从臂 | `web_session.py`、LeRobot SO-101 适配 |
+| 手柄示教 | X05 输入接入遥操作适配器，复用 LeRobot FK/IK 处理末端控制 | `web_session.py` |
+| 数据采集 | 双路图像、六维关节状态和动作同步进入 LeRobot 数据集 | `web_session.py`、`dataset_view.py` |
+| ACT 训练 | 用示教动作监督策略，根据图像和关节状态学习后续动作序列 | `bridge.py`、LeRobot ACT |
+| 真机推理 | 加载检查点，接入观测处理与 rollout 执行流程 | `web_session.py` |
+| 保存优化 | 流式视频编码、设备会话复用与视频动作帧数检查 | `web_session.py` |
 
 ## 工程优化
 
@@ -82,7 +103,7 @@ Windows 侧负责网页入口和 USB 接入，机器人学习运行环境位于 
 
 示教、录制和运行由会话层统一持有机械臂连接。控制台提供暂停和人工接管入口；暂停时撤销旧控制权，避免已在计算中的动作继续下发。该部分用于真机调试和人工修正。
 
-## 原工程目录
+## 代码结构
 
 ```text
 Ji_Xiebi/
