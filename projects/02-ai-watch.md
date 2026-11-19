@@ -16,11 +16,11 @@
 
 ## 实物演示
 
-实拍展示表盘、触控菜单、AI 对话入口与聊天页面。以下为完整演示视频，约 24 秒。
+演示聚焦 AI 语音助手页面操作，截取自原视频 9.3—13.7 秒，时长约 4.4 秒。
 
-https://github.com/user-attachments/assets/01f67a89-3718-4604-8d73-f24d3897cc7d
+https://github.com/user-attachments/assets/d709026d-7f4c-44de-a495-99f8d731d8c9
 
-[下载完整演示视频](ai-watch/media/watch-demo.mp4)
+[下载 AI 页面演示片段](ai-watch/media/ai-demo.mp4)
 
 ## 完整交互流程
 
@@ -46,7 +46,7 @@ https://github.com/user-attachments/assets/01f67a89-3718-4604-8d73-f24d3897cc7d
 
 | 功能 | 实现方法 | 对应代码 |
 | :-- | :-- | :-- |
-| 触屏交互 | LVGL 对象与触摸事件、页面切换、聊天文字回调 | `squareline_ui/`、`LVGL_Driver.cpp` |
+| 触屏交互 | LVGL 对象与触摸事件、AI 对话入口、文字与状态回调 | `squareline_ui/`、`LVGL_Driver.cpp` |
 | 音频采集 | 16 kHz、16 bit 单声道采样与 WAV 缓冲 | `MIC_Recorder.cpp` |
 | 对话生成 | STT 识别，提示词与识别文字交给 DeepSeek | `AI_Chat.cpp` |
 | 播报控制 | TTS 音频获取、分阶段更新、I²S 输出 | `TTS_Speaker.cpp` |
@@ -57,14 +57,11 @@ https://github.com/user-attachments/assets/01f67a89-3718-4604-8d73-f24d3897cc7d
 
 ### 触屏交互
 
-使用 LVGL 和 SquareLine Studio 搭建 12 个页面，编写页面切换与对话显示逻辑。生成页面集中在 `squareline_ui/`，聊天界面通过回调接收用户文字、AI 回复和运行状态。中文显示由字体资源和 `ui_FontLoader.cpp` 配合。
+使用 LVGL 和 SquareLine Studio 编写 AI 对话入口、录音状态与文字回复显示逻辑。页面代码集中在 `squareline_ui/`，AI 对话界面通过回调接收识别文字、AI 回复和运行状态。中文显示由字体资源和 `ui_FontLoader.cpp` 配合。
 
-<table>
-<tr><td width="50%" align="center"><img src="ai-watch/media/watch-face.jpg" alt="手表表盘实拍视频截图" width="100%"><br><sub>表盘画面 · 视频 2.5 秒</sub></td><td width="50%" align="center"><img src="ai-watch/media/menu.jpg" alt="触控菜单实拍视频截图" width="100%"><br><sub>触控菜单 · 视频 6.0 秒</sub></td></tr>
-<tr><td width="50%" align="center"><img src="ai-watch/media/voice-page.jpg" alt="AI 对话入口实拍视频截图" width="100%"><br><sub>AI 对话入口 · 视频 10.8 秒</sub></td><td width="50%" align="center"><img src="ai-watch/media/conversation.jpg" alt="聊天界面实拍视频截图" width="100%"><br><sub>聊天页面 · 视频 20.4 秒</sub></td></tr>
-</table>
+<p align="center"><img src="ai-watch/media/voice-page.jpg" alt="AI 语音助手入口实拍视频截图" width="680"></p>
 
-<sub>以上四幅画面均直接截取自本页演示视频。</sub>
+<p align="center"><sub>AI 语音助手入口 · 原视频 10.8 秒抽帧</sub></p>
 
 ### 对话流程管理
 
@@ -112,7 +109,7 @@ watch/
 | :-- | :-- |
 | 硬件 | 微雪 ESP32-S3 触屏开发板 |
 | 开发 | C/C++、PlatformIO、Arduino |
-| 交互 | LVGL、SquareLine Studio、12 个页面 |
+| 交互 | LVGL、SquareLine Studio、AI 对话入口与状态显示 |
 | 语音 | 16 kHz 录音、STT、DeepSeek、TTS、I²S |
 | 缓冲 | PSRAM 录音缓冲 |
 

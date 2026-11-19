@@ -30,11 +30,11 @@
 
 ### AI 语音对话手表
 
-使用微雪 ESP32-S3 触屏开发板，完成 12 个界面和语音对话交互。录音经 STT 转为文本，交给 DeepSeek 根据提示词生成回复，再由 TTS 合成语音并通过 I²S 播放。
+使用微雪 ESP32-S3 触屏开发板，完成 AI 语音对话界面与交互流程。录音经 STT 转为文本，交给 DeepSeek 根据提示词生成回复，再由 TTS 合成语音并通过 I²S 播放。
 
 **项目成果**　中国国际大学生创新大赛三等奖、“汇创青春”市级二等奖、“挑战杯”校内赛二等奖。
 
-<img src="projects/ai-watch/media/watch-face.jpg" alt="AI 语音对话手表实拍视频抽帧" width="680">
+<img src="projects/ai-watch/media/voice-page.jpg" alt="手表 AI 对话入口实拍视频抽帧" width="680">
 
 [查看实拍演示、交互流程与代码结构 →](projects/02-ai-watch.md)
 
