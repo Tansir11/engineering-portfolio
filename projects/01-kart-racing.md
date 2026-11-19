@@ -39,33 +39,14 @@ https://github.com/user-attachments/assets/12288ee7-8f96-4954-93e7-d39065050453
 车端围绕「输入与定位、任务调度、运动控制」组织功能，地面站负责状态展示与参数交互。当前应用运行在 CPU0，CPU1、CPU2 保留启动框架。
 
 ```mermaid
-flowchart TD
-    subgraph INPUT["输入与定位"]
-        I["IMU + 双轮编码器"] --> P["ins.c 位姿估计"]
-        CAM["摄像头"] --> V["leader_vision / leader_position 色块检测与位置估计"]
-        RC["遥控输入 / 语音命令"]
-    end
-    subgraph CONTROL["任务与车辆控制"]
-        SM["state_machine.c 总状态机"]
-        MAP["map.c 路径记录"]
-        FOLLOW["leader_follow.c 视觉跟随"]
-        RETURN["subject3.c 返航路径生成"]
-        TRACK["路径追踪与车速规划"]
-        EXEC["motor / steer_motor 执行器控制"]
-    end
-    P --> MAP
-    P --> TRACK
-    V --> FOLLOW
-    RC --> SM
-    SM --> FOLLOW
-    SM --> TRACK
-    MAP --> RETURN
-    RETURN --> TRACK
-    FOLLOW --> EXEC
-    TRACK --> EXEC
-    SM <-->|"遥测与参数"| UART["uart.c 通信"]
-    UART <-->|"串口 / Wi-Fi TCP"| GCS["KartGCS 后端"]
-    GCS <-->|"WebSocket"| WEB["网页轨迹、曲线与参数"]
+flowchart LR
+    S["IMU · 双轮编码器"] --> P["ins / map<br/>位姿估计与路径记录"]
+    C["摄像头"] --> V["leader_*<br/>目标检测与跟随"]
+    R["遥控 · 语音"] --> T["state_machine / subject*<br/>任务调度与阶段切换"]
+    P --> T
+    V --> T
+    T --> E["路径追踪<br/>车速与转向闭环"]
+    T <-->|"遥测与参数"| G["KartGCS<br/>网页地面站"]
 ```
 
 **调度方式**　`user/isr.c` 每 10 ms 调用 `state_machine_tick_10ms()`，执行定位更新、任务控制和执行器闭环。CPU0 主循环处理图像服务、地面站通信、地图保存与加载，科目三在主循环生成返航地图。
