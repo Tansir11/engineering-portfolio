@@ -141,22 +141,13 @@ y += 位移增量 × sin(中点航向)
 
 基于 FastAPI 和 WebSocket 开发网页地面站。车端经串口或 Wi-Fi TCP 上报数据，后端解析后更新车辆轨迹、运行曲线和状态；网页可下发控制指令与参数，支持记录并导出 CSV。
 
-![地面站实际运行中的轨迹与曲线](kart-racing/media/national-ground-station-run.jpg)
+![KartGCS 地面站实际前端界面](kart-racing/media/ground-station.png)
 
-<sub>实车运行画面，左侧显示轨迹，右侧对照运行曲线。</sub>
+<sub>实际网页前端截图，展示轨迹区、控制面板、日志区与曲线区；截图时未连接设备。</sub>
 
 ![另一组地面站实车联调画面](kart-racing/media/national-ground-station-curves.jpg)
 
 <sub>另一组调试记录，用于结合轨迹、曲线和参数观察车辆响应。</sub>
-
-<details>
-<summary>查看地面站完整界面布局</summary>
-
-![地面站界面布局](kart-racing/media/ground-station.png)
-
-该截图为未连接设备时的界面布局，展示轨迹区、控制面板、日志区与曲线区。
-
-</details>
 
 ### 遥测记录与数据导出
 
