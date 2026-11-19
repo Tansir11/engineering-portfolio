@@ -158,19 +158,15 @@ y += 位移增量 × sin(中点航向)
 
 </details>
 
-### 遥测记录与数据分析
+### 遥测记录与数据导出
 
 车端 `telemetry.c` 生成遥测快照，`uart.c` 发送运行数据；`protocol.py` 按前缀解析帧，`server.py` 分发消息与导出数据，`session_manager.py` 组织会话记录。路径点通过 `P2` 帧传输，地图上下文使用 `M2` 帧，视觉跟随记录使用 `LF` 帧。
 
 ![导出的运行数据表格](kart-racing/media/national-data-table.png)
 
-<sub>原始导出表格截图，包含 S3_CRUISE 等状态及运行数据。下方分析图使用另一份视觉跟随日志样例。</sub>
+<sub>原始导出表格截图，包含 S3_CRUISE 等状态及运行数据。</sub>
 
-**实测案例**　从视觉跟随日志中提取 84.7 秒、1,152 条连续记录，将状态切换与左右轮实测速度对齐。记录在 9.203 秒处于丢失减速状态，9.416 秒切换到丢失停车状态，10.118 秒两轮实测速度均为零，可据此观察控制状态与机械减速过程的对应关系。
-
-![视觉跟随状态与双轮实测速度](kart-racing/media/telemetry.png)
-
-[查看样例 CSV](kart-racing/data/follow-sample.csv) · [字段说明](kart-racing/data/README.md) · [地面站前端](kart-racing/ground-station/index.html)
+[地面站前端](kart-racing/ground-station/index.html)
 
 ## 代码结构
 
