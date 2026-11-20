@@ -63,5 +63,3 @@
 ## 阅读与资料
 
 本仓库用于展示三个项目的成果与实现思路，项目页面中的目录树对应原工程结构。各项目附有实拍视频、功能流程与模块说明。
-
-展示结构参考：[Personal-Project-Showcase](https://github.com/u32JOJO/Personal-Project-Showcase)。
